@@ -1,0 +1,54 @@
+server:
+  port: 8084
+  
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017            
+      authentication-database: admin
+      database: configuration
+      username: root
+      password: password
+
+# using ingress
+#spring:
+#  elasticsearch:
+#    host: minikube.io
+#    port: 443
+#    pathPrefix: /mongodb/
+#    verifyHostnames: false
+#    validateCertificates: false
+#    authentication-database: admin    
+#    database: configuration
+#    username: root
+#    password: password
+            
+---
+server:
+  port: 8084
+  
+management:
+  endpoint:
+    health:     
+      probes:
+        enabled: true
+          
+spring:
+  config:
+    activate:
+      on-profile: avib
+  data:
+    mongodb:
+      host: avib-mongodb
+      port: 27017
+      authentication-database: admin
+      database: configuration
+      username: root
+      password: password

@@ -1,5 +1,5 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Description
+Flow Microservice
 
 # Getting Started
 TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
@@ -7,6 +7,22 @@ TODO: Guide users through getting your code up and running on their own system. 
 2.	Software dependencies
 3.	Latest releases
 4.	API references
+
+# Install locally the argo client sdk
+```
+mvn install:install-file -Dfile=argo-client-java-v3.4.5.jar -DgroupId=io.argoproj.workflow -DartifactId=argo-client-java -Dversion=v3.4.5 -Dpackaging=jar
+```
+
+Link to download
+
+```
+https://github.com/argoproj/argo-workflows/packages/1060616?version=v3.4.5
+```
+
+# API Documentation Portal
+```
+http://localhost:8084/swagger-ui/index.html
+```
 
 # Build and Test
 TODO: Describe and show how to build your code and run the tests. 
