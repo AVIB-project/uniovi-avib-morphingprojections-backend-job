@@ -1,6 +1,6 @@
 package es.uniovi.avib.morphing.projections.backend.job.controller;
 
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import es.uniovi.avib.morphing.projections.backend.job.domain.Job;
+import es.uniovi.avib.morphing.projections.backend.job.dto.JobLogDto;
 import es.uniovi.avib.morphing.projections.backend.job.dto.JobSubmitDto;
 import es.uniovi.avib.morphing.projections.backend.job.service.JobService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,22 @@ import lombok.extern.slf4j.Slf4j;
 public class JobController {
 	private final JobService jobService;
 	
+	@RequestMapping(method = { RequestMethod.GET }, produces = "application/json", value = "/cases/{caseId}")
+	public ResponseEntity<List<Job>> findByCaseId(@PathVariable String caseId) {
+		List<Job> jobs = (List<Job>) jobService.getJobsByCaseId(caseId);
+					
+		log.debug("findByCaseId: found {} jobs", jobs.size());
+		
+		return new ResponseEntity<List<Job>>(jobs, HttpStatus.OK);			
+	}
+	
+	@RequestMapping(method = { RequestMethod.GET }, produces = "application/json", value = "/{jobName}/getJobLogs")
+    public JobLogDto getJobLogs(@PathVariable String jobName) {
+		log.debug("getJobLogs: get logs from name {}", jobName);
+		
+        return jobService.getJobLogs(jobName);
+    }	
+		
 	@RequestMapping(method = { RequestMethod.POST }, produces = "application/json", value = "/submitJob")	
 	public ResponseEntity<Object> submitJob(@RequestBody JobSubmitDto jobSubmitDto) {
 		log.debug("submitJob job for case Id with id {}", jobSubmitDto.getCaseId());
@@ -32,9 +50,4 @@ public class JobController {
 			
 		return new ResponseEntity<Object>(resultFlow, HttpStatus.OK);			
 	}
-	
-	@RequestMapping(method = { RequestMethod.GET }, produces = "application/json", value = "value = /{jobName}/getJobLogs")
-    public Map<String, String> getJobLogs(@PathVariable String jobName) {
-        return jobService.getJobLogs(jobName);
-    }	
 }

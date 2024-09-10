@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "organization.host",
+    "type": "java.lang.String",
+    "description": "A description for 'organization.host'"
+  },
+  {
+    "name": "organization.port",
+    "type": "java.lang.String",
+    "description": "A description for 'organization.port'"
+  },
+  {
+    "name": "kube.url",
+    "type": "java.lang.String",
+    "description": "A description for 'kube.url'"
+  }
+]}

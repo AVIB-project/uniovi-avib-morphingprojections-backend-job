@@ -29,7 +29,14 @@ spring:
 #    database: configuration
 #    username: root
 #    password: password
-            
+
+kube:
+  url: https://172.23.0.2:8443
+  
+organization:
+  host: localhost
+  port: 8082
+              
 ---
 server:
   port: 8084
@@ -52,3 +59,7 @@ spring:
       database: configuration
       username: root
       password: password
+      
+organization:
+  host: uniovi-avib-morphingprojections-backend-organization
+  port: 8082      

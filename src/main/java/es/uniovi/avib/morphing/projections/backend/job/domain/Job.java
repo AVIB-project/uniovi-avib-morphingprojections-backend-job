@@ -27,10 +27,10 @@ public class Job {
 	@Field("case_id")
 	private ObjectId caseId;
 
-	@NotNull(message = "Job State not be null")
-	@Field("state")
-	private String state;
-
+	@NotNull(message = "Job Name not be null")
+	@Field("name")
+	private String name;
+	
 	@NotNull(message = "Job Image not be null")
 	@Field("image")
 	private String image;
@@ -39,8 +39,9 @@ public class Job {
 	@Field("version")
 	private String version;
 	
-	@Field("job_creation")
-	private String jobCreation;	
+	@NotNull(message = "Job State not be null")
+	@Field("state")
+	private String state;
 	
 	@NotNull(message = "Creation by may not be null")
 	@Field("creation_by")
