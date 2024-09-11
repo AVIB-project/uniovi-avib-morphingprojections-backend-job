@@ -40,7 +40,7 @@ public class KubeClientConfig {
 		else
 			return new KubernetesClientBuilder()
 					.withConfig(new ConfigBuilder()
-					        .withMasterUrl("https://172.23.0.2:8443")
+					        .withMasterUrl(kubeUrl)
 					        .withOauthToken("sha256~secret")
 					        .withNamespace("default")
 					        .withCaCertFile(caCertData.getFile().getAbsolutePath())

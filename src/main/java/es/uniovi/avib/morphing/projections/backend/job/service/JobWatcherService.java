@@ -1,6 +1,7 @@
 package es.uniovi.avib.morphing.projections.backend.job.service;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.boot.context.event.ApplicationStartedEvent;
@@ -26,14 +27,18 @@ public class JobWatcherService {
 	
 	private final JobRepository jobRepository;
 	
+	private final String JOB_RUNNING_STATE = "Running";
+	private final String JOB_SUCCEEDED_STATE = "Succeeded";
+	private final String JOB_FAILED_STATE = "Failed";
+	
 	private String getJobState(Job job) {
 		if (job.getStatus().getActive() != null && job.getStatus().getActive() == 1) {
-			return "Running";			
+			return JOB_RUNNING_STATE;			
 		} else {
 			if (job.getStatus().getSucceeded() != null && job.getStatus().getSucceeded() == 1) {
-				return "Succeeded";	
+				return JOB_SUCCEEDED_STATE;	
 			} else {
-				return "Failed";  
+				return JOB_FAILED_STATE;  
 			}
 		}
 	}
@@ -64,8 +69,16 @@ public class JobWatcherService {
 			                	// set last state job
 			                	if (jobsScheduled.size() > 0) {
 			                		es.uniovi.avib.morphing.projections.backend.job.domain.Job jobScheduled = jobsScheduled.get(0);
-			                		jobScheduled.setState(getJobState(job));
 			                		
+			                		String jobState = getJobState(job);
+			                		
+			                		// set last state and datetime
+			                		jobScheduled.setState(getJobState(job));
+			                		if (jobState.equals(JOB_RUNNING_STATE))
+			                			jobScheduled.setJobCreationDate(new Date());
+			                		else
+			                			jobScheduled.setJobFinalizeDate(new Date());
+			                					                					                				                		
 			                		jobRepository.save(jobScheduled);
 			                	}
 			                	

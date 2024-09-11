@@ -42,6 +42,12 @@ public class Job {
 	@NotNull(message = "Job State not be null")
 	@Field("state")
 	private String state;
+
+	@Field("job_creation_date")
+	private Date jobCreationDate;
+	
+	@Field("job_finalize_date")
+	private Date jobFinalizeDate;
 	
 	@NotNull(message = "Creation by may not be null")
 	@Field("creation_by")
