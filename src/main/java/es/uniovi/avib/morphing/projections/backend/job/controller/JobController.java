@@ -27,8 +27,8 @@ public class JobController {
 	private final JobService jobService;
 	
 	@RequestMapping(method = { RequestMethod.GET }, produces = "application/json", value = "/cases/{caseId}")
-	public ResponseEntity<List<Job>> findByCaseId(@PathVariable String caseId) {
-		List<Job> jobs = (List<Job>) jobService.getJobsByCaseId(caseId);
+	public ResponseEntity<List<Job>> findJobsByCaseId(@PathVariable String caseId) {
+		List<Job> jobs = (List<Job>) jobService.findJobsByCaseId(caseId);
 					
 		log.debug("findByCaseId: found {} jobs", jobs.size());
 		

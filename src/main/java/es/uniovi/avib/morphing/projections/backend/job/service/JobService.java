@@ -40,8 +40,8 @@ public class JobService {
 	private final RestTemplate restTemplate;
 	private final JobRepository jobRepository;
 	
-	public List<es.uniovi.avib.morphing.projections.backend.job.domain.Job> getJobsByCaseId(String caseId) {
-		log.debug("getJobsByCaseId: found project with caseId: {}", caseId);
+	public List<es.uniovi.avib.morphing.projections.backend.job.domain.Job> findJobsByCaseId(String caseId) {
+		log.debug("getJobsByCaseId: found job with caseId: {}", caseId);
 		
 		return jobRepository.findByCaseId(new ObjectId(caseId));
 	}
