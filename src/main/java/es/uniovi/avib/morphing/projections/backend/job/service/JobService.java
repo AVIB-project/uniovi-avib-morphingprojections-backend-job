@@ -40,6 +40,8 @@ public class JobService {
 	private final RestTemplate restTemplate;
 	private final JobRepository jobRepository;
 	
+	private final String JOB_RUNNING_STATE = "Running";
+	
 	public List<es.uniovi.avib.morphing.projections.backend.job.domain.Job> findJobsByCaseId(String caseId) {
 		log.debug("getJobsByCaseId: found job with caseId: {}", caseId);
 		
@@ -66,7 +68,19 @@ public class JobService {
 		
 		String guid = UUID.randomUUID().toString();
 		
-		try {    		
+		try {    
+    		// STEP01: save job scheduled
+    		es.uniovi.avib.morphing.projections.backend.job.domain.Job job = new es.uniovi.avib.morphing.projections.backend.job.domain.Job();
+    		
+    		job.setCaseId(new ObjectId(caseProjectDto.getBody().getCaseId()));
+    		job.setName("job-"+ guid);
+    		job.setImage(imageDto.getBody().getImage());
+    		job.setState(JOB_RUNNING_STATE);
+    		job.setVersion(imageDto.getBody().getVersion());
+    		
+    		jobRepository.save(job);
+    		
+    		// STEP02: deploy job in Kubernetes 
     		final Job jobSchedule = new JobBuilder()
   	              .withApiVersion("batch/v1")
   	              	.withNewMetadata()
@@ -91,22 +105,11 @@ public class JobService {
   	              	.endSpec()
   	              .build();  
     		
-			// execute the job
     		Job jobsResult = kubeConfig.getKubernetesClient().batch().v1().jobs()
 				.inNamespace(JOB_NAMESPACE)
 				.resource(jobSchedule)
 			.create();   		
-    		
-    		// save job scheduled
-    		es.uniovi.avib.morphing.projections.backend.job.domain.Job job = new es.uniovi.avib.morphing.projections.backend.job.domain.Job();
-    		
-    		job.setCaseId(new ObjectId(caseProjectDto.getBody().getCaseId()));
-    		job.setName("job-"+ guid);
-    		job.setImage(imageDto.getBody().getImage());
-    		job.setVersion(imageDto.getBody().getVersion());
-    		
-    		jobRepository.save(job);
-    		
+    		    		
             result.put("message", "Job with name " + jobsResult.getMetadata().getName() + " created in default namespace.");
         } catch (KubernetesClientException exception) {
         	log.error(exception.getStackTrace().toString());
