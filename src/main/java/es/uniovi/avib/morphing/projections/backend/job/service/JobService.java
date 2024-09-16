@@ -31,7 +31,7 @@ import es.uniovi.avib.morphing.projections.backend.job.repository.JobRepository;
 @AllArgsConstructor
 @Service
 public class JobService {	
-	final int TTL_AFTER_FINISHED = 10;
+	final int TTL_AFTER_FINISHED = 3600;
 	final String JOB_NAMESPACE = "default";
 
 	private final KubeClientConfig kubeConfig;

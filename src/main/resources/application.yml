@@ -15,7 +15,7 @@ spring:
       authentication-database: admin
       database: configuration
       username: root
-      password: password
+      password: q8SFbdesFv
 
 # using ingress
 #spring:
