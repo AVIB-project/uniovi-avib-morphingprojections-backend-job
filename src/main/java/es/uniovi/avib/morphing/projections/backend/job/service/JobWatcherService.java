@@ -74,10 +74,15 @@ public class JobWatcherService {
 			                		
 			                		// set last state and datetime
 			                		jobScheduled.setState(getJobState(job));
-			                		if (jobState.equals(JOB_RUNNING_STATE))
-			                			jobScheduled.setJobCreationDate(new Date());
-			                		else
+			                		
+			                		if (jobState.equals(JOB_RUNNING_STATE)) {
+			                			if (jobScheduled.getJobCreationDate() == null) {
+			                				jobScheduled.setJobCreationDate(new Date());
+			                			}
+			                		}
+			                		else {
 			                			jobScheduled.setJobFinalizeDate(new Date());
+			                		}
 			                					                					                				                		
 			                		jobRepository.save(jobScheduled);
 			                	}

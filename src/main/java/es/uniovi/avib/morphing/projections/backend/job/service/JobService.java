@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +14,8 @@ import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.JobList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+
+import org.bson.types.ObjectId;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +31,11 @@ import es.uniovi.avib.morphing.projections.backend.job.repository.JobRepository;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class JobService {	
-	final int TTL_AFTER_FINISHED = 3600;
+public class JobService {
 	final String JOB_NAMESPACE = "default";
-
+	final String JOB_ENVIRONMENT = "minikube";
+	final int JOB_TTL_AFTER_FINISHED = 3600;
+	
 	private final KubeClientConfig kubeConfig;
 	private final OrganizationConfig organizationConfig;
 	
@@ -52,6 +54,8 @@ public class JobService {
  	public Object submitJob(JobSubmitDto jobSubmitDto) {
 		log.debug("submitJob for caseId with id {}", jobSubmitDto.getCaseId());
 		
+		Map<String, String> result = new HashMap<>();
+		
 		// get case from Id
 		String urlCase = "http://" + organizationConfig.getHost() + ":" + organizationConfig.getPort() + "/cases/" + jobSubmitDto.getCaseId();
 		
@@ -61,15 +65,24 @@ public class JobService {
 		String urlImage = "http://" + organizationConfig.getHost() + ":" + organizationConfig.getPort() + "/images/" + caseProjectDto.getBody().getImageId();
 		
 		ResponseEntity<ImageDto> imageDto = restTemplate.getForEntity(urlImage, ImageDto.class);
+		
+		// get job image
 		String image = imageDto.getBody().getImage() + ":" +imageDto.getBody().getVersion();
 		
-		// create job from image 
-		Map<String, String> result = new HashMap<>();
+		// get job command
+		String command = imageDto.getBody().getCommand();
 		
-		String guid = UUID.randomUUID().toString();
-		
+		// get job submit parameters if exist and substitute
+		if (jobSubmitDto.getParameters() != null) {
+			for (String parameter : jobSubmitDto.getParameters().keySet()) {
+				command = command.replace("${" + parameter + "}", jobSubmitDto.getParameters().get(parameter));
+			}
+		}		
+						
 		try {    
     		// STEP01: save job scheduled
+			String guid = UUID.randomUUID().toString();
+			
     		es.uniovi.avib.morphing.projections.backend.job.domain.Job job = new es.uniovi.avib.morphing.projections.backend.job.domain.Job();
     		
     		job.setCaseId(new ObjectId(caseProjectDto.getBody().getCaseId()));
@@ -88,8 +101,8 @@ public class JobService {
   	              		.withNamespace(JOB_NAMESPACE)
   	              	.endMetadata()
   	              	.withNewSpec()
-  	              		.withTtlSecondsAfterFinished(TTL_AFTER_FINISHED)
-  	              		.withNewTemplate()
+  	              		.withTtlSecondsAfterFinished(JOB_TTL_AFTER_FINISHED)  	              		
+  	              		.withNewTemplate()  	              			
   	              			.withNewMetadata()
   	              				.withName("pod-"+ guid)
   	              			.endMetadata()
@@ -97,9 +110,18 @@ public class JobService {
   	              				.addNewContainer()
   	              					.withName("container-" + guid)
   	              					.withImage(image)
-  	              					.withArgs("/bin/sh", "-c", "for i in $(seq 120); do echo \"Welcome $i times\"; sleep 1; done")
+  	              					.addNewEnv()
+	              						.withName("ARG_PYTHON_PROFILES_ACTIVE")
+	              						.withValue(JOB_ENVIRONMENT)
+	              					.endEnv()  	              					
+  	              					//.withArgs("/bin/sh", "-c", "for i in $(seq 120); do echo \"Welcome $i times\"; sleep 1; done")
+	              					//.withArgs("/bin/sh", "-c", "python src/morphingprojections_job_projection/service.py --case-id 65cdc989fa8c8fdbcefac01e --space primal,dual")
+	              					.withArgs("/bin/sh", "-c", command)
   	              				.endContainer()
   	              				.withRestartPolicy("Never")
+  	              				.addNewImagePullSecret()
+  	              					.withName("acr-avib-secret")  	              					
+  	              				.endImagePullSecret()
   	              			.endSpec()
   	              		.endTemplate()
   	              	.endSpec()

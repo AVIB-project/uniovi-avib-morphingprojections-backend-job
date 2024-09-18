@@ -1,6 +1,7 @@
 package es.uniovi.avib.morphing.projections.backend.job.dto;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,10 @@ public class ImageDto {
 	private String image;
 	
 	private String version;
+	
+	private String command;
+	
+	private List<String> parameters;
 	
 	private String creationBy;	
 	
