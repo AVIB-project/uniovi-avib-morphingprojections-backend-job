@@ -33,7 +33,7 @@ import es.uniovi.avib.morphing.projections.backend.job.repository.JobRepository;
 @Service
 public class JobService {
 	final String JOB_NAMESPACE = "default";
-	final String JOB_ENVIRONMENT = "minikube";
+	final String JOB_SECRET_PULL_REQUEST = "acr-avib-secret";
 	final int JOB_TTL_AFTER_FINISHED = 3600;
 	
 	private final KubeClientConfig kubeConfig;
@@ -69,6 +69,9 @@ public class JobService {
 		// get job image
 		String image = imageDto.getBody().getImage() + ":" +imageDto.getBody().getVersion();
 		
+		// get job environment
+		String environment = imageDto.getBody().getEnvironment();
+				
 		// get job command
 		String command = imageDto.getBody().getCommand();
 		
@@ -112,7 +115,7 @@ public class JobService {
   	              					.withImage(image)
   	              					.addNewEnv()
 	              						.withName("ARG_PYTHON_PROFILES_ACTIVE")
-	              						.withValue(JOB_ENVIRONMENT)
+	              						.withValue(environment)
 	              					.endEnv()  	              					
   	              					//.withArgs("/bin/sh", "-c", "for i in $(seq 120); do echo \"Welcome $i times\"; sleep 1; done")
 	              					//.withArgs("/bin/sh", "-c", "python src/morphingprojections_job_projection/service.py --case-id 65cdc989fa8c8fdbcefac01e --space primal,dual")
@@ -120,7 +123,7 @@ public class JobService {
   	              				.endContainer()
   	              				.withRestartPolicy("Never")
   	              				.addNewImagePullSecret()
-  	              					.withName("acr-avib-secret")  	              					
+  	              					.withName(JOB_SECRET_PULL_REQUEST)  	              					
   	              				.endImagePullSecret()
   	              			.endSpec()
   	              		.endTemplate()

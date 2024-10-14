@@ -21,6 +21,8 @@ public class ImageDto {
 	
 	private String version;
 	
+	private String environment;
+	
 	private String command;
 	
 	private List<String> parameters;

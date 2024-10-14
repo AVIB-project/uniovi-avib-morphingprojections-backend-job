@@ -17,26 +17,13 @@ spring:
       username: root
       password: q8SFbdesFv
 
-# using ingress
-#spring:
-#  elasticsearch:
-#    host: minikube.io
-#    port: 443
-#    pathPrefix: /mongodb/
-#    verifyHostnames: false
-#    validateCertificates: false
-#    authentication-database: admin    
-#    database: configuration
-#    username: root
-#    password: password
-
-kube:
-  url: https://172.23.0.2:8443
-  
 organization:
   host: localhost
   port: 8082
-              
+
+kube:
+  url: https://172.23.0.2:8443
+                
 ---
 server:
   port: 8084
@@ -53,13 +40,16 @@ spring:
       on-profile: avib
   data:
     mongodb:
-      host: avib-mongodb
+      host: gsdpi-mongodb
       port: 27017
       authentication-database: admin
       database: configuration
       username: root
-      password: password
+      password: 46cfdg1oXL
       
 organization:
   host: uniovi-avib-morphingprojections-backend-organization
-  port: 8082      
+  port: 8082
+  
+kube:
+  url: https://192.168.59.103:8443
