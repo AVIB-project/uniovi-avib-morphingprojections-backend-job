@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.uniovi.avib.morphing.projections.backend.job.domain.Job;
 import es.uniovi.avib.morphing.projections.backend.job.dto.JobLogDto;
+import es.uniovi.avib.morphing.projections.backend.job.dto.JobSubmitConverterDto;
 import es.uniovi.avib.morphing.projections.backend.job.dto.JobSubmitDto;
 import es.uniovi.avib.morphing.projections.backend.job.service.JobService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,4 +52,13 @@ public class JobController {
 			
 		return new ResponseEntity<Object>(resultFlow, HttpStatus.OK);			
 	}
+	
+	@RequestMapping(method = { RequestMethod.POST }, produces = "application/json", value = "/submitConverterJob")	
+	public ResponseEntity<Object> submitConverterJob(@RequestBody JobSubmitConverterDto jobSubmitConverterDto) {
+		log.debug("submitConverterJob job for case Id with id {}", jobSubmitConverterDto.getCaseId());
+								
+		Object resultFlow = jobService.submitConverterJob(jobSubmitConverterDto);
+			
+		return new ResponseEntity<Object>(resultFlow, HttpStatus.OK);			
+	}	
 }

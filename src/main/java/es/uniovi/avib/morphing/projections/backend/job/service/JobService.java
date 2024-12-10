@@ -1,5 +1,6 @@
 package es.uniovi.avib.morphing.projections.backend.job.service;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import es.uniovi.avib.morphing.projections.backend.job.configuration.Organizatio
 import es.uniovi.avib.morphing.projections.backend.job.dto.CaseProjectDto;
 import es.uniovi.avib.morphing.projections.backend.job.dto.ImageDto;
 import es.uniovi.avib.morphing.projections.backend.job.dto.JobLogDto;
+import es.uniovi.avib.morphing.projections.backend.job.dto.JobSubmitConverterDto;
 import es.uniovi.avib.morphing.projections.backend.job.dto.JobSubmitDto;
 import es.uniovi.avib.morphing.projections.backend.job.repository.JobRepository;
 
@@ -67,7 +69,7 @@ public class JobService {
 		ResponseEntity<ImageDto> imageDto = restTemplate.getForEntity(urlImage, ImageDto.class);
 		
 		// get job image
-		String image = imageDto.getBody().getImage() + ":" +imageDto.getBody().getVersion();
+		String image = imageDto.getBody().getImage() + ":" + imageDto.getBody().getVersion();
 		
 		// get job environment
 		String environment = imageDto.getBody().getEnvironment();
@@ -116,9 +118,7 @@ public class JobService {
   	              					.addNewEnv()
 	              						.withName("ARG_PYTHON_PROFILES_ACTIVE")
 	              						.withValue(environment)
-	              					.endEnv()  	              					
-  	              					//.withArgs("/bin/sh", "-c", "for i in $(seq 120); do echo \"Welcome $i times\"; sleep 1; done")
-	              					//.withArgs("/bin/sh", "-c", "python src/morphingprojections_job_projection/service.py --case-id 65cdc989fa8c8fdbcefac01e --space primal,dual")
+	              					.endEnv()
 	              					.withArgs("/bin/sh", "-c", command)
   	              				.endContainer()
   	              				.withRestartPolicy("Never")
@@ -143,8 +143,86 @@ public class JobService {
         } finally {
             return result;
 		}		
-	}
+	}	
 	
+ 	@SuppressWarnings("finally")
+	public Object submitConverterJob(JobSubmitConverterDto jobSubmitConverterDto) {
+		log.debug("submitJob for caseId with id {}", jobSubmitConverterDto.getCaseId());
+				
+ 		final String IMAGE_JOB_CONVERTER = "gsdpi/morphingprojections-job-converter";
+ 		final String VERSION_JOB_CONVERTER = "1.2.0";
+ 		final String ENVIRONMENT_JOB_CONVERTER = "avib";
+ 		
+		Map<String, String> result = new HashMap<>();
+		
+ 		String image = IMAGE_JOB_CONVERTER + ":" + VERSION_JOB_CONVERTER;
+ 		String command =  MessageFormat.format("python src/morphingprojections_job_converter/service.py --organization-id {0} --project-id {1} --case-id {2} --file-name {3}", 
+ 				jobSubmitConverterDto.getOrganizationId(),
+ 				jobSubmitConverterDto.getProjectId(),
+ 				jobSubmitConverterDto.getCaseId(),
+ 				jobSubmitConverterDto.getParameters().get("file"));
+		
+ 		try { 			 			
+    		// STEP01: save job scheduled
+			String guid = UUID.randomUUID().toString();
+					
+    		es.uniovi.avib.morphing.projections.backend.job.domain.Job job = new es.uniovi.avib.morphing.projections.backend.job.domain.Job();
+    		
+    		job.setCaseId(new ObjectId(jobSubmitConverterDto.getCaseId()));
+    		job.setName("job-"+ guid);
+    		job.setImage(IMAGE_JOB_CONVERTER);
+    		job.setState(JOB_RUNNING_STATE);
+    		job.setVersion(VERSION_JOB_CONVERTER);
+    		
+    		jobRepository.save(job);
+    		
+    		// STEP02: deploy job in Kubernetes 
+    		final Job jobSchedule = new JobBuilder()
+  	              .withApiVersion("batch/v1")
+  	              	.withNewMetadata()
+  	              		.withName("job-"+ guid)
+  	              		.withNamespace(JOB_NAMESPACE)
+  	              	.endMetadata()
+  	              	.withNewSpec()
+  	              		.withTtlSecondsAfterFinished(JOB_TTL_AFTER_FINISHED)  	              		
+  	              		.withNewTemplate()  	              			
+  	              			.withNewMetadata()
+  	              				.withName("pod-"+ guid)
+  	              			.endMetadata()
+  	              			.withNewSpec()
+  	              				.addNewContainer()
+  	              					.withName("container-" + guid)
+  	              					.withImage(image)
+  	              					.addNewEnv()
+	              						.withName("ARG_PYTHON_PROFILES_ACTIVE")
+	              						.withValue(ENVIRONMENT_JOB_CONVERTER)
+	              					.endEnv()
+	              					.withArgs("/bin/sh", "-c", command)
+  	              				.endContainer()
+  	              				.withRestartPolicy("Never")
+  	              				.addNewImagePullSecret()
+  	              					.withName(JOB_SECRET_PULL_REQUEST)  	              					
+  	              				.endImagePullSecret()
+  	              			.endSpec()
+  	              		.endTemplate()
+  	              	.endSpec()
+  	              .build();  
+    		
+    		Job jobsResult = kubeConfig.getKubernetesClient().batch().v1().jobs()
+				.inNamespace(JOB_NAMESPACE)
+				.resource(jobSchedule)
+			.create();   		
+    		    		
+            result.put("message", "Job with name " + jobsResult.getMetadata().getName() + " created in default namespace.");
+        } catch (KubernetesClientException exception) {
+        	log.error(exception.getStackTrace().toString());
+            
+            result.put("error", exception.getMessage());           
+        } finally {
+            return result;
+		}			
+	}
+ 	
 	@SuppressWarnings("finally")
 	public JobLogDto getJobLogs(String jobName) {
 		JobLogDto jobLogDto = null;
